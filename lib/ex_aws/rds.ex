@@ -277,6 +277,21 @@ defmodule ExAws.RDS do
     request(:get, "/", query_params)
   end
 
+  @doc """
+  Generates an auth token used to connect to a db with IAM credentials.
+  See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html
+  """
+  @spec generate_db_auth_token(hostname :: binary, username :: binary, port :: integer, config :: map) :: binary
+  def generate_db_auth_token(hostname, username, port \\ 3306, config \\ %{}) do
+    config = ExAws.Config.new(:rds, config)
+    query_params = ["Action": "connect", "DBUser": username]
+    datetime = :calendar.universal_time
+    # The signing utilities expect an actual URL, whereas RDS rejects a protocol on the token
+    url = "https://#{hostname}:#{port}/"
+    {:ok, token} = ExAws.Auth.presigned_url(:get, url, :"rds-db", datetime, config, 900, query_params, "")
+    String.trim_leading(token, "https://")
+  end
+
   defp request(http_method, path, data) do
     %ExAws.Operation.RestQuery{
       http_method: http_method,
