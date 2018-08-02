@@ -277,6 +277,34 @@ defmodule ExAws.RDS do
     request(:get, "/", query_params)
   end
 
+  @type list_tags_for_resource_opts :: [
+          [{:filter_member_1, filter}, ...]
+        ]
+  @doc """
+  Lists all tags on an Amazon RDS resource.
+
+  resource_name is the ARN for the RDS resource. Its returned from
+  describe_db_instances. Although the doc implies that a filter
+  could be used as as second parameter it also states:
+  "This parameter is not currently supported" so don't attempt to
+  use the opts for now.
+  """
+  @spec list_tags_for_resource(resource_name :: binary) :: ExAws.Operation.RestQuery.t()
+  @spec list_tags_for_resource(opts :: list_tags_for_resource_opts) ::
+          ExAws.Operation.RestQuery.t()
+  def list_tags_for_resource(resource_name, opts \\ []) do
+    query_params =
+      opts
+      |> normalize_opts()
+      |> Map.merge(%{
+        "Action" => "ListTagsForResource",
+        "Version" => @version,
+        "ResourceName" => resource_name
+      })
+
+    request(:get, "/", query_params)
+  end
+
   @doc """
   Generates an auth token used to connect to a db with IAM credentials.
   See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html
