@@ -279,7 +279,7 @@ defmodule ExAws.RDS do
 
   @doc """
   Generates an auth token used to connect to a db with IAM credentials.
-  See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html
+  See <http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html>
   """
   @spec generate_db_auth_token(hostname :: binary, username :: binary, port :: integer, config :: map) :: binary
   def generate_db_auth_token(hostname, username, port \\ 3306, config \\ %{}) do
