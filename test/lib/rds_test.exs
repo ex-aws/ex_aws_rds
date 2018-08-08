@@ -273,4 +273,22 @@ defmodule ExAws.RDSTest do
       )
   end
 
+  test "list_tags_for_resource" do
+    expected = %ExAws.Operation.RestQuery{
+      action: nil,
+      body: "",
+      http_method: :get,
+      params: %{
+        "Action" => "ListTagsForResource",
+        "ResourceName" => "arn:some-arn",
+        "Version" => "2014-10-31"
+      },
+      parser: &ExAws.Utils.identity/2,
+      path: "/",
+      service: :rds
+    }
+
+    assert expected == RDS.list_tags_for_resource("arn:some-arn")
+  end
+
 end
