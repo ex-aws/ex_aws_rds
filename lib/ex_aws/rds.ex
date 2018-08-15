@@ -376,6 +376,56 @@ defmodule ExAws.RDS do
     request(:get, "/", query_params)
   end
 
+  @type describe_pending_maintenance_actions_opts :: [
+          [{:filter_member_1, filter}, ...]
+          | {:marker, binary}
+          | {:max_records, 20..100}
+          | {:resource_identifier, binary}
+        ]
+  @doc """
+  Returns a list of resources (for example, DB instances) that have at least one pending maintenance action.
+
+  The options don't seem to work. They don't work using the AWS CLI either.
+  """
+  @spec describe_pending_maintenance_actions() :: ExAws.Operation.RestQuery.t()
+  @spec describe_pending_maintenance_actions(opts :: describe_pending_maintenance_actions_opts) ::
+          ExAws.Operation.RestQuery.t()
+  def describe_pending_maintenance_actions(opts \\ []) do
+    query_params =
+      opts
+      |> normalize_opts()
+      |> Map.merge(%{
+        "Action" => "DescribePendingMaintenanceActions",
+        "Version" => @version
+      })
+
+    request(:get, "/", query_params)
+  end
+
+  @type describe_db_clusters_opts :: [
+          {:db_cluster_identifier, binary}
+          | [{:filter_member_1, filter}, ...]
+          | {:marker, binary}
+          | {:max_records, 20..100}
+        ]
+
+  @doc """
+  Returns information about provisioned Aurora DB clusters. This API supports pagination
+  """
+  @spec describe_db_clusters() :: ExAws.Operation.RestQuery.t()
+  @spec describe_db_clusters(opts :: describe_db_clusters_opts) :: ExAws.Operation.RestQuery.t()
+  def describe_db_clusters(opts \\ []) do
+    query_params =
+      opts
+      |> normalize_opts()
+      |> Map.merge(%{
+        "Action" => "DescribeDBClusters",
+        "Version" => @version
+      })
+
+    request(:get, "/", query_params)
+  end
+
   @doc """
   Generates an auth token used to connect to a db with IAM credentials.
   See <http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html>
