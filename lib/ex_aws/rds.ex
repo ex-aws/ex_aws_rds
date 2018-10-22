@@ -97,7 +97,7 @@ defmodule ExAws.RDS do
   end
 
   @type describe_db_instances_opts :: [
-          {:db_instance_identifier, binary}
+          {:DB_instance_identifier, binary}
           | [{:filter_member_1, filter}, ...]
           | {:marker, binary}
           | {:max_records, 20..100}
