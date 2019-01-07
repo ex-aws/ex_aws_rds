@@ -4,7 +4,7 @@ defmodule ExAws.RDS.Mixfile do
   def project do
     [
       app: :ex_aws_rds,
-      version: "2.0.1",
+      version: "2.0.2",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       description: "ExAws.RDS service package",
