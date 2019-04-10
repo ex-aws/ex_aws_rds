@@ -55,6 +55,25 @@ defmodule ExAws.RDS do
     request(:post, "/", query_params)
   end
 
+  @doc """
+  Adds metadata tags to an Amazon RDS resource
+
+  These tags can also be used with cost allocation reporting to track cost associated
+  with Amazon RDS resources, or used in a Condition statement in an IAM policy for
+  Amazon RDS.
+
+  For an overview on tagging Amazon RDS resources, see [Tagging Amazon RDS
+  Resources](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Tagging.html)
+
+  ## Parameters:
+
+    * resource - The Amazon RDS resource that the tags are added to. This value is an
+    Amazon Resource Name (ARN).
+
+    * tags - a List of the tags to be assigned to the Amazon RDS resource.
+  """
+  @spec add_tags_to_resource(resource :: binary, tags :: [tag, ...]) ::
+          ExAws.Operation.RestQuery.t()
   def add_tags_to_resource(resource, tags) do
     query_params = %{
       "Action" => "AddTagsToResource",
@@ -492,6 +511,40 @@ defmodule ExAws.RDS do
       nil -> map
       value -> Map.put(map, param_name, value)
     end
+  end
+
+  @doc """
+  Removes metadata tags from an Amazon RDS resource
+
+  For an overview on tagging an Amazon RDS resource, see [Tagging Amazon RDS
+  Resources](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Tagging.html)
+  in the Amazon RDS User Guide.
+
+  ## Parameters:
+
+    * resource - The Amazon RDS resource that the tags are removed from.
+    This value is an Amazon Resource Name (ARN).
+
+    * tag_keys - a List of the tag keys (name) of the tag to be removed
+  """
+  @spec remove_tags_from_resource(resource :: binary, tag_keys :: [binary, ...]) ::
+          ExAws.Operation.RestQuery.t()
+  def remove_tags_from_resource(resource, tag_keys) do
+    query_params = %{
+      "Action" => "RemoveTagsFromResource",
+      "ResourceName" => resource,
+      "Version" => @version
+    }
+
+    query_params =
+      tag_keys
+      |> Stream.with_index(1)
+      |> Enum.reduce(query_params, fn {k, n}, tags_map ->
+        tags_map
+        |> Map.put("TagKeys.member.#{Integer.to_string(n)}", k)
+      end)
+
+    request(:post, "/", query_params)
   end
 
   @doc """

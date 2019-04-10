@@ -334,4 +334,18 @@ defmodule ExAws.RDSTest do
       service: :rds
     }
   end
+
+  test "remove tags from resource" do
+    params = %{
+      "Action" => "RemoveTagsFromResource",
+      "Version" => "2014-10-31",
+      "ResourceName" => "some_resource",
+      "TagKeys.member.1" => "key1",
+      "TagKeys.member.2" => "key2"
+    }
+
+    expected = base_rest_query(params, :post)
+    result = RDS.remove_tags_from_resource("some_resource", ["key1", "key2"])
+    assert expected == result
+  end
 end
