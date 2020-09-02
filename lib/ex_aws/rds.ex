@@ -427,6 +427,58 @@ defmodule ExAws.RDS do
   end
 
   @doc """
+  Creates a DBSnapshot. The source DBInstance must be in "available" state.
+  See <https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBSnapshot.html>
+  """
+  @spec create_db_snapshot(instance_id :: binary, snapshot_id :: binary) :: ExAws.Operation.RestQuery.t()
+  def create_db_snapshot(instance_id, snapshot_id) do
+    query_params = %{
+      "Action" => "CreateDBSnapshot",
+      "DBInstanceIdentifier" => instance_id,
+      "DBSnapshotIdentifier" => snapshot_id,
+      "Version" => @version
+    }
+
+    request(:post, "/", query_params)
+  end
+
+
+  @type create_db_snapshot_opts :: [
+             {:include_public, binary}
+             | {:marker, binary}
+             | {:include_public, boolean}
+             | {:include_shared, boolean}
+             | {:snapshot_type, binary}
+             | {:db_instance_identifier, binary}
+             | {:db_snapshot_identifier, binary}
+             | {:dbi_resource_id, binary}
+             | {:max_records, 20..100}
+           ]
+  @doc """
+  Returns information about DB snapshots.
+  See <https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSnapshots.html>
+  """
+  @spec describe_db_snapshots(opts :: create_db_snapshot_opts) :: ExAws.Operation.RestQuery.t()
+  def describe_db_snapshots(opts \\ []) do
+    query_params = %{
+      "Action" => "DescribeDBSnapshots",
+      "Version" => @version
+    }
+     |> extract_to(:db_snapshot_identifier, "DBSnapshotIdentifier", opts)
+     |> extract_to(:db_instance_identifier, "DBInstanceIdentifier", opts)
+     |> Map.merge(normalize_opts(Keyword.drop(opts, [:db_snapshot_identifier, :db_instance_identifier])))
+
+    request(:post, "/", query_params)
+  end
+
+  defp extract_to(map, key, param_name, keywords) do
+    case Keyword.get(keywords, key) do
+      nil -> map
+      value -> Map.put(map, param_name, value)
+    end
+  end
+
+  @doc """
   Generates an auth token used to connect to a db with IAM credentials.
   See <http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html>
   """

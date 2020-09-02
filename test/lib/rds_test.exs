@@ -278,6 +278,48 @@ defmodule ExAws.RDSTest do
     assert expected == RDS.describe_pending_maintenance_actions()
   end
 
+  test "create_db_snapshot" do
+    params = %{
+      "Action" => "CreateDBSnapshot",
+      "Version" => "2014-10-31",
+      "DBInstanceIdentifier" => "mysqldb-02",
+      "DBSnapshotIdentifier" => "mySQLdb-snap-1",
+    }
+    expected = base_rest_query(params, :post)
+    assert expected == RDS.create_db_snapshot("mysqldb-02", "mySQLdb-snap-1")
+  end
+
+  test "describe_db_snapshots" do
+    params = %{
+      "Action" => "DescribeDBSnapshots",
+      "Version" => "2014-10-31",
+      "DBInstanceIdentifier" => "mysqldb-02",
+      "DBSnapshotIdentifier" => "some_id",
+      "DbiResourceId" => "arn:value",
+      "IncludePublic" => false,
+      "IncludeShared" => true,
+      "MaxRecords" => 10,
+    }
+    expected = base_rest_query(params, :post)
+    assert expected == RDS.describe_db_snapshots(
+             max_records: 10,
+             include_public: false,
+             include_shared: true,
+             dbi_resource_id: "arn:value",
+             db_instance_identifier: "mysqldb-02",
+             db_snapshot_identifier: "some_id",
+           )
+  end
+
+  test "describe_db_snapshots no params" do
+    params = %{
+      "Action" => "DescribeDBSnapshots",
+      "Version" => "2014-10-31"
+    }
+    expected = base_rest_query(params, :post)
+    assert expected == RDS.describe_db_snapshots()
+  end
+
   defp base_rest_query(params, http_method \\ :get) do
     %ExAws.Operation.RestQuery{
       action: nil,
