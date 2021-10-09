@@ -444,8 +444,8 @@ defmodule ExAws.RDS do
   end
 
 
-  # Copyright Daniel Bustamante Ospina 2020:
-  @type create_db_snapshot_opts :: [
+  # Portions copyright Daniel Bustamante Ospina 2020:
+  @type describe_db_snapshot_opts ::
              {:include_public, binary}
              | {:marker, binary}
              | {:include_public, boolean}
@@ -462,7 +462,7 @@ defmodule ExAws.RDS do
   Returns information about DB snapshots.
   See <https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSnapshots.html>
   """
-  @spec describe_db_snapshots(opts :: create_db_snapshot_opts) :: ExAws.Operation.RestQuery.t()
+  @spec describe_db_snapshots(opts :: describe_db_snapshot_opts) :: ExAws.Operation.RestQuery.t()
   def describe_db_snapshots(opts \\ []) do
     query_params = %{
       "Action" => "DescribeDBSnapshots",
