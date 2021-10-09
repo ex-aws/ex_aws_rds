@@ -1,7 +1,7 @@
 Version `2.0.3`:
 
-- Enhancement: Add function remove_tags_from_resource
-- Maintenance: Add doc and spec for add_tags_to_resource
+- Enhancement: Add function `remove_tags_from_resource/2`.
+- Maintenance: Add doc and spec for `add_tags_to_resource/2`.
 - Enhancement: Add functions `create_db_snapshot/2` and `describe_db_snapshots/1`.
 - Maintenance: Move and update license info in README to LICENSE doc file.
 
