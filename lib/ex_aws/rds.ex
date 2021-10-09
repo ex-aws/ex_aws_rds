@@ -461,8 +461,11 @@ defmodule ExAws.RDS do
 
   # Portions copyright Daniel Bustamante Ospina 2020:
   @doc """
-  Returns information about DB snapshots.
-  See <https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSnapshots.html>
+  Returns an AWS query to return info about DB (RDS instance) snapshots
+
+  See:
+
+  - [DescribeDBSnapshots - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSnapshots.html)
   """
   @spec describe_db_snapshots(opts :: describe_db_snapshot_opts) :: ExAws.Operation.RestQuery.t()
   def describe_db_snapshots(opts \\ []) do
