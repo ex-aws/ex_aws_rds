@@ -426,6 +426,7 @@ defmodule ExAws.RDS do
     request(:get, "/", query_params)
   end
 
+  # Copyright Daniel Bustamante Ospina 2020:
   @doc """
   Creates a DBSnapshot. The source DBInstance must be in "available" state.
   See <https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBSnapshot.html>
@@ -443,6 +444,7 @@ defmodule ExAws.RDS do
   end
 
 
+  # Copyright Daniel Bustamante Ospina 2020:
   @type create_db_snapshot_opts :: [
              {:include_public, binary}
              | {:marker, binary}
@@ -454,6 +456,8 @@ defmodule ExAws.RDS do
              | {:dbi_resource_id, binary}
              | {:max_records, 20..100}
            ]
+
+  # Copyright Daniel Bustamante Ospina 2020:
   @doc """
   Returns information about DB snapshots.
   See <https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSnapshots.html>
@@ -471,6 +475,7 @@ defmodule ExAws.RDS do
     request(:post, "/", query_params)
   end
 
+  # Copyright Daniel Bustamante Ospina 2020:
   defp extract_to(map, key, param_name, keywords) do
     case Keyword.get(keywords, key) do
       nil -> map

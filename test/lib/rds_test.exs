@@ -278,6 +278,7 @@ defmodule ExAws.RDSTest do
     assert expected == RDS.describe_pending_maintenance_actions()
   end
 
+  # Copyright Daniel Bustamante Ospina 2020:
   test "create_db_snapshot" do
     params = %{
       "Action" => "CreateDBSnapshot",
@@ -289,6 +290,7 @@ defmodule ExAws.RDSTest do
     assert expected == RDS.create_db_snapshot("mysqldb-02", "mySQLdb-snap-1")
   end
 
+  # Copyright Daniel Bustamante Ospina 2020:
   test "describe_db_snapshots" do
     params = %{
       "Action" => "DescribeDBSnapshots",
@@ -311,6 +313,7 @@ defmodule ExAws.RDSTest do
            )
   end
 
+  # Copyright Daniel Bustamante Ospina 2020:
   test "describe_db_snapshots no params" do
     params = %{
       "Action" => "DescribeDBSnapshots",
