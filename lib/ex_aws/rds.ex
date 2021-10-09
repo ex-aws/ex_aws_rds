@@ -473,7 +473,7 @@ defmodule ExAws.RDS do
       "Action"  => "DescribeDBSnapshots",
       "Version" => @version
     }
-     |> extract_to(:db_snapshot_identifier, "DBSnapshotIdentifier", opts)
+    # TODO: Move this 'extract' logic into `normalize_opts`?:
     |> extract_to(:db_snapshot_identifier, "DBSnapshotIdentifier", opts)
     |> extract_to(:db_instance_identifier, "DBInstanceIdentifier", opts)
     |> Map.merge(
