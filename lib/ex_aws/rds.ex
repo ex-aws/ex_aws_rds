@@ -5,6 +5,15 @@ defmodule ExAws.RDS do
 
   @version "2014-10-31"
 
+
+  @doc """
+  Returns the AWS RDS API version targeted by this library as a string
+  """
+  @spec api_version :: String.t
+  def api_version, do: @version
+
+
+
   @type db_instance_classes :: [
           :db_t1_micro
           | :db_m1_small
