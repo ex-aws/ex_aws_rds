@@ -461,6 +461,56 @@ defmodule ExAws.RDS do
   end
 
 
+  @doc """
+  Copies an AWS RDS instance snapshot to a new snapshot
+
+  If an AWS KMS key ID is supplied, the copy (new) snapshot will be encrypted with that key.
+  """
+  @spec copy_db_snapshot(
+    source_snapshot_id :: binary,
+    target_snapshot_id :: binary,
+    kms_key_id         :: binary | nil
+  ) :: ExAws.Operation.RestQuery.t()
+  def copy_db_snapshot(source_snapshot_id, target_snapshot_id, kms_key_id \\ nil) do
+
+    query_params = %{
+      "Action"                     => "CopyDBSnapshot",
+      "SourceDBSnapshotIdentifier" => source_snapshot_id,
+      "TargetDBSnapshotIdentifier" => target_snapshot_id,
+      "Version"                    => @version
+    }
+    |> Map.merge(
+      if is_nil(kms_key_id) do
+        %{}
+      else
+        %{ "KmsKeyId" => kms_key_id }
+      end
+    )
+
+    request(:post, "/", query_params)
+  end
+
+
+  @doc """
+  Deletes a snapshot
+
+  See:
+
+  - [DeleteDBSnapshot - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DeleteDBSnapshot.html)
+  """
+  @spec delete_db_snapshot(snapshot_id :: binary) :: ExAws.Operation.RestQuery.t()
+  def delete_db_snapshot(snapshot_id) do
+    query_params = %{
+      "Action"               => "DeleteDBSnapshot",
+      "DBSnapshotIdentifier" => snapshot_id,
+      "Version"              => @version
+    }
+
+    request(:post, "/", query_params)
+  end
+
+
+
   # Portions copyright Daniel Bustamante Ospina 2020:
   @type describe_db_snapshot_opts ::
   [
@@ -501,6 +551,68 @@ defmodule ExAws.RDS do
 
     request(:post, "/", query_params)
   end
+
+
+  @type restore_db_instance_from_db_snapshot_opts ::
+  [
+      { :instance_class,          binary   }
+    | { :availability_zone,       binary   }
+    | { :db_parameter_group_name, binary   }
+    | { :vpc_security_group_ids,  [binary] }
+  ]
+
+
+
+  @doc """
+  Restores an RDS instance snapshot to a new instance
+
+  See:
+
+  - [RestoreDBInstanceFromDBSnapshot - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html)
+  """
+  @spec restore_db_instance_from_db_snapshot(
+    instance_id :: binary,
+    snapshot_id :: binary,
+    opts        :: restore_db_instance_from_db_snapshot_opts
+  )
+  :: ExAws.Operation.RestQuery.t
+  def restore_db_instance_from_db_snapshot(instance_id, snapshot_id, opts \\ []) do
+
+    query_params =
+      case Keyword.get(opts, :vpc_security_group_ids) do
+        nil -> %{}
+
+
+        vpc_security_group_ids ->
+
+          vpc_security_group_ids
+          |> Enum.with_index(
+            fn group_id, index ->
+              {
+                "VpcSecurityGroupIds.VpcSecurityGroupId.#{index + 1}",
+                group_id
+              }
+            end
+          )
+          |> Enum.into(%{})
+      end
+      |> extract_to(:instance_class,          "DBInstanceClass",      opts)
+      |> extract_to(:availability_zone,       "AvailabilityZone",     opts)
+      |> extract_to(:db_parameter_group_name, "DBParameterGroupName", opts)
+      |> Map.merge(
+        %{
+          "Action"               => "RestoreDBInstanceFromDBSnapshot",
+          "DBInstanceIdentifier" => instance_id,
+          "DBSnapshotIdentifier" => snapshot_id,
+          "PubliclyAccessible"   => "false",
+          "Version"              => @version
+        }
+      )
+
+    request(:post, "/", query_params)
+  end
+
+
 
 
   @doc """
