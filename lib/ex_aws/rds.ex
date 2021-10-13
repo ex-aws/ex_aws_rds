@@ -3,8 +3,6 @@ defmodule ExAws.RDS do
   Operations on AWS RDS
   """
 
-  import ExAws.Utils, only: [camelize_keys: 1]
-
   @version "2014-10-31"
 
   @type db_instance_classes :: [
@@ -505,14 +503,6 @@ defmodule ExAws.RDS do
   end
 
 
-  # Copyright Daniel Bustamante Ospina 2020:
-  defp extract_to(map, key, param_name, keywords) do
-    case Keyword.get(keywords, key) do
-      nil -> map
-      value -> Map.put(map, param_name, value)
-    end
-  end
-
   @doc """
   Removes metadata tags from an Amazon RDS resource
 
@@ -547,6 +537,7 @@ defmodule ExAws.RDS do
     request(:post, "/", query_params)
   end
 
+
   @doc """
   Generates an auth token used to connect to a db with IAM credentials.
   See <http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html>
@@ -570,18 +561,32 @@ defmodule ExAws.RDS do
     String.trim_leading(token, "https://")
   end
 
-  defp request(http_method, path, data) do
-    %ExAws.Operation.RestQuery{
-      http_method: http_method,
-      path: path,
-      params: data,
-      service: :rds
-    }
+
+
+  defp extract_to(map, key, param_name, keywords) do
+    case Keyword.get(keywords, key) do
+      nil   -> map
+      value -> Map.put(map, param_name, value)
+    end
   end
 
+
   defp normalize_opts(opts) do
+    import ExAws.Utils, only: [camelize_keys: 1]
+
     opts
     |> Enum.into(%{})
     |> camelize_keys()
   end
+
+
+  defp request(http_method, path, data) do
+    %ExAws.Operation.RestQuery{
+      http_method: http_method,
+      path:        path,
+      params:      data,
+      service:     :rds
+    }
+  end
+
 end
