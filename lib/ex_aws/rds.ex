@@ -675,6 +675,7 @@ defmodule ExAws.RDS do
 
 
 
+  # TODO: Combine with `normalize_opts/1` and rename to `opts_to_params`?:
   defp extract_to(map, key, param_name, keywords) do
     case Keyword.get(keywords, key) do
       nil   -> map
@@ -683,6 +684,7 @@ defmodule ExAws.RDS do
   end
 
 
+  # TODO: Combine with `extract_to/4` and rename to `opts_to_params`?:
   defp normalize_opts(opts) do
     import ExAws.Utils, only: [camelize_keys: 1]
 

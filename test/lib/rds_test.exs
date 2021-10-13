@@ -5,6 +5,7 @@ defmodule ExAws.RDSTest do
   alias ExAws.RDS
 
 
+  # TODO: Replace all/most of these tests with 'options to request parameters' tests?
 
 
   test "insert instance no options" do
