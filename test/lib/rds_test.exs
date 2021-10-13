@@ -1,19 +1,11 @@
-# defmodule Test.Dummy.RDS do
-#   use ExAws.RDS.Client
-#
-#   def config_root, do: Application.get_all_env(:ex_aws)
-#
-#   def request(_client, http_method, path, data) do
-#     data
-#     |> Enum.into(%{})
-#     |> Map.put(:path, path)
-#     |> Map.put(:http_method, http_method)
-#   end
-# end
-
 defmodule ExAws.RDSTest do
+
   use ExUnit.Case, async: true
+
   alias ExAws.RDS
+
+
+
 
   test "insert instance no options" do
     params = %{
@@ -39,6 +31,7 @@ defmodule ExAws.RDSTest do
                "MySQL"
              )
   end
+
 
   test "insert instance with options" do
     params = %{
@@ -71,12 +64,14 @@ defmodule ExAws.RDSTest do
              )
   end
 
+
   test "describe_db_instances no options" do
     params = %{"Action" => "DescribeDBInstances", "Version" => "2014-10-31"}
 
     expected = base_rest_query(params)
     assert expected == RDS.describe_db_instances()
   end
+
 
   test "describe_db_instances with options" do
     params = %{
@@ -92,6 +87,7 @@ defmodule ExAws.RDSTest do
              RDS.describe_db_instances(max_records: 10, "Filter.Member.1": "some_filter")
   end
 
+
   test "modify_db_instance no options" do
     params = %{
       "Action" => "ModifyDBInstance",
@@ -103,6 +99,7 @@ defmodule ExAws.RDSTest do
 
     assert expected == RDS.modify_db_instance("some_instance")
   end
+
 
   test "modify_db_instance with options" do
     params = %{
@@ -127,6 +124,7 @@ defmodule ExAws.RDSTest do
              )
   end
 
+
   test "delete_db_instance no options" do
     params = %{
       "Action" => "DeleteDBInstance",
@@ -138,6 +136,7 @@ defmodule ExAws.RDSTest do
 
     assert expected == RDS.delete_db_instance("some_instance")
   end
+
 
   test "delete_db_instance with options" do
     params = %{
@@ -152,6 +151,7 @@ defmodule ExAws.RDSTest do
     assert expected == RDS.delete_db_instance("some_instance", skip_final_snapshot: true)
   end
 
+
   test "describe_events no options" do
     params = %{
       "Action" => "DescribeEvents",
@@ -162,6 +162,7 @@ defmodule ExAws.RDSTest do
 
     assert expected == RDS.describe_events()
   end
+
 
   test "describe_events with options" do
     params = %{
@@ -184,6 +185,7 @@ defmodule ExAws.RDSTest do
     assert expected == result
   end
 
+
   test "reboot_db_instance no options" do
     params = %{
       "Action" => "RebootDBInstance",
@@ -195,6 +197,7 @@ defmodule ExAws.RDSTest do
 
     assert expected == RDS.reboot_db_instance("some_instance")
   end
+
 
   test "reboot_db_instance with options" do
     params = %{
@@ -208,6 +211,7 @@ defmodule ExAws.RDSTest do
 
     assert expected == RDS.reboot_db_instance("some_instance", force_failover: true)
   end
+
 
   test "apply_pending_maintenance" do
     params = %{
@@ -224,6 +228,7 @@ defmodule ExAws.RDSTest do
     assert expected == result
   end
 
+
   test "add_source_id_to_subscription" do
     params = %{
       "Action" => "AddSourceIdentifierToSubscription",
@@ -236,6 +241,7 @@ defmodule ExAws.RDSTest do
 
     assert expected == RDS.add_source_id_to_subscription("some_source_id", "some_subscription")
   end
+
 
   test "add_tags_to_resource" do
     params = %{
@@ -254,6 +260,7 @@ defmodule ExAws.RDSTest do
     assert expected == result
   end
 
+
   test "list_tags_for_resource" do
     params = %{
       "Action" => "ListTagsForResource",
@@ -265,6 +272,7 @@ defmodule ExAws.RDSTest do
 
     assert expected == RDS.list_tags_for_resource("arn:some-arn")
   end
+
 
   test "describe_db_clusters" do
     params = %{"Action" => "DescribeDBClusters", "Version" => "2014-10-31"}
@@ -278,17 +286,20 @@ defmodule ExAws.RDSTest do
     assert expected == RDS.describe_pending_maintenance_actions()
   end
 
+
   # Copyright Daniel Bustamante Ospina 2020:
   test "create_db_snapshot" do
     params = %{
       "Action" => "CreateDBSnapshot",
       "Version" => "2014-10-31",
       "DBInstanceIdentifier" => "mysqldb-02",
-      "DBSnapshotIdentifier" => "mySQLdb-snap-1",
+      "DBSnapshotIdentifier" => "mySQLdb-snap-1"
     }
+
     expected = base_rest_query(params, :post)
     assert expected == RDS.create_db_snapshot("mysqldb-02", "mySQLdb-snap-1")
   end
+
 
   # Copyright Daniel Bustamante Ospina 2020:
   test "describe_db_snapshots" do
@@ -300,18 +311,22 @@ defmodule ExAws.RDSTest do
       "DbiResourceId" => "arn:value",
       "IncludePublic" => false,
       "IncludeShared" => true,
-      "MaxRecords" => 10,
+      "MaxRecords" => 10
     }
+
     expected = base_rest_query(params, :post)
-    assert expected == RDS.describe_db_snapshots(
-             max_records: 10,
-             include_public: false,
-             include_shared: true,
-             dbi_resource_id: "arn:value",
-             db_instance_identifier: "mysqldb-02",
-             db_snapshot_identifier: "some_id",
-           )
+
+    assert expected ==
+             RDS.describe_db_snapshots(
+               max_records: 10,
+               include_public: false,
+               include_shared: true,
+               dbi_resource_id: "arn:value",
+               db_instance_identifier: "mysqldb-02",
+               db_snapshot_identifier: "some_id"
+             )
   end
+
 
   # Copyright Daniel Bustamante Ospina 2020:
   test "describe_db_snapshots no params" do
@@ -319,21 +334,11 @@ defmodule ExAws.RDSTest do
       "Action" => "DescribeDBSnapshots",
       "Version" => "2014-10-31"
     }
+
     expected = base_rest_query(params, :post)
     assert expected == RDS.describe_db_snapshots()
   end
 
-  defp base_rest_query(params, http_method \\ :get) do
-    %ExAws.Operation.RestQuery{
-      action: nil,
-      body: "",
-      http_method: http_method,
-      parser: &ExAws.Utils.identity/2,
-      path: "/",
-      params: params,
-      service: :rds
-    }
-  end
 
   test "remove tags from resource" do
     params = %{
@@ -348,4 +353,19 @@ defmodule ExAws.RDSTest do
     result = RDS.remove_tags_from_resource("some_resource", ["key1", "key2"])
     assert expected == result
   end
+
+
+
+  defp base_rest_query(params, http_method \\ :get) do
+    %ExAws.Operation.RestQuery{
+      action: nil,
+      body: "",
+      http_method: http_method,
+      parser: &ExAws.Utils.identity/2,
+      path: "/",
+      params: params,
+      service: :rds
+    }
+  end
+
 end
