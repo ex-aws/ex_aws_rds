@@ -273,8 +273,10 @@ defmodule ExAws.RDS do
           | {:storage_type, :standard | :gp2 | :io1}
           | {:tde_credential_arn, binary}
           | {:tde_credential_password, binary}
-          | [{:vpc_security_group_ids_member_1, [binary]}, ...]
+          | {:vpc_security_group_ids, [binary]}
         ]
+
+
   @doc """
   Modify settings for a DB instance.
   """
@@ -283,16 +285,24 @@ defmodule ExAws.RDS do
           ExAws.Operation.RestQuery.t()
   def modify_db_instance(instance_id, opts \\ []) do
     query_params =
-      opts
-      |> normalize_opts()
-      |> Map.merge(%{
-        "Action" => "ModifyDBInstance",
-        "DBInstanceIdentifier" => instance_id,
-        "Version" => @version
-      })
+      %{}
+      |> extract_to(:vpc_security_group_ids, nil, opts)
+      |> Map.merge(
+        opts
+        |> Keyword.drop([:vpc_security_group_ids])
+        |> normalize_opts()
+      )
+      |> Map.merge(
+        %{
+          "Action"               => "ModifyDBInstance",
+          "DBInstanceIdentifier" => instance_id,
+          "Version"              => @version
+        }
+      )
 
     request(:patch, "/", query_params)
   end
+
 
   @type delete_db_instance_opts :: [
           {:final_db_snapshot_identifier, binary}
@@ -588,23 +598,8 @@ defmodule ExAws.RDS do
   def restore_db_instance_from_db_snapshot(instance_id, snapshot_id, opts \\ []) do
 
     query_params =
-      case Keyword.get(opts, :vpc_security_group_ids) do
-        nil -> %{}
-
-
-        vpc_security_group_ids ->
-
-          vpc_security_group_ids
-          |> Enum.with_index(
-            fn group_id, index ->
-              {
-                "VpcSecurityGroupIds.VpcSecurityGroupId.#{index + 1}",
-                group_id
-              }
-            end
-          )
-          |> Enum.into(%{})
-      end
+      %{}
+      |> extract_to(:vpc_security_group_ids,  nil,                    opts)
       |> extract_to(:instance_class,          "DBInstanceClass",      opts)
       |> extract_to(:availability_zone,       "AvailabilityZone",     opts)
       |> extract_to(:db_parameter_group_name, "DBParameterGroupName", opts)
@@ -685,12 +680,39 @@ defmodule ExAws.RDS do
 
 
   # TODO: Combine with `normalize_opts/1` and rename to `opts_to_params`?:
+
+
+  defp extract_to(map, :vpc_security_group_ids, _, keywords) do
+    map
+    |> Map.merge(
+      case Keyword.get(keywords, :vpc_security_group_ids) do
+        nil -> %{}
+
+
+        vpc_security_group_ids ->
+
+          vpc_security_group_ids
+          |> Enum.with_index(
+            fn group_id, index ->
+              {
+                "VpcSecurityGroupIds.VpcSecurityGroupId.#{index + 1}",
+                group_id
+              }
+            end
+          )
+          |> Enum.into(%{})
+      end
+    )
+  end
+
+
   defp extract_to(map, key, param_name, keywords) do
     case Keyword.get(keywords, key) do
       nil   -> map
       value -> Map.put(map, param_name, value)
     end
   end
+
 
 
   # TODO: Combine with `extract_to/4` and rename to `opts_to_params`?:
