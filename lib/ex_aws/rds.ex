@@ -678,6 +678,19 @@ defmodule ExAws.RDS do
   end
 
 
+  @doc """
+  Revoke ingress from a security group
+
+  See:
+
+  - [RevokeDBSecurityGroupIngress - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RevokeDBSecurityGroupIngress.html)
+  """
+  def revoke_db_security_group_ingress() do
+    # TODO
+    raise "Not implemented"
+  end
+
+
 
   # TODO: Combine with `normalize_opts/1` and rename to `opts_to_params`?:
 
