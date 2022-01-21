@@ -3,9 +3,16 @@ defmodule ExAws.RDS do
   Operations on AWS RDS
   """
 
-  import ExAws.Utils, only: [camelize_keys: 1]
-
   @version "2014-10-31"
+
+
+  @doc """
+  Returns the AWS RDS API version targeted by this library as a string
+  """
+  @spec api_version :: String.t
+  def api_version, do: @version
+
+
 
   @type db_instance_classes :: [
           :db_t1_micro
@@ -55,6 +62,25 @@ defmodule ExAws.RDS do
     request(:post, "/", query_params)
   end
 
+  @doc """
+  Adds metadata tags to an Amazon RDS resource
+
+  These tags can also be used with cost allocation reporting to track cost associated
+  with Amazon RDS resources, or used in a Condition statement in an IAM policy for
+  Amazon RDS.
+
+  For an overview on tagging Amazon RDS resources, see [Tagging Amazon RDS
+  Resources](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Tagging.html)
+
+  ## Parameters:
+
+    * resource - The Amazon RDS resource that the tags are added to. This value is an
+    Amazon Resource Name (ARN).
+
+    * tags - a List of the tags to be assigned to the Amazon RDS resource.
+  """
+  @spec add_tags_to_resource(resource :: binary, tags :: [tag, ...]) ::
+          ExAws.Operation.RestQuery.t()
   def add_tags_to_resource(resource, tags) do
     query_params = %{
       "Action" => "AddTagsToResource",
@@ -247,8 +273,10 @@ defmodule ExAws.RDS do
           | {:storage_type, :standard | :gp2 | :io1}
           | {:tde_credential_arn, binary}
           | {:tde_credential_password, binary}
-          | [{:vpc_security_group_ids_member_1, [binary]}, ...]
+          | {:vpc_security_group_ids, [binary]}
         ]
+
+
   @doc """
   Modify settings for a DB instance.
   """
@@ -257,16 +285,24 @@ defmodule ExAws.RDS do
           ExAws.Operation.RestQuery.t()
   def modify_db_instance(instance_id, opts \\ []) do
     query_params =
-      opts
-      |> normalize_opts()
-      |> Map.merge(%{
-        "Action" => "ModifyDBInstance",
-        "DBInstanceIdentifier" => instance_id,
-        "Version" => @version
-      })
+      %{}
+      |> extract_to(:vpc_security_group_ids, nil, opts)
+      |> Map.merge(
+        opts
+        |> Keyword.drop([:vpc_security_group_ids])
+        |> normalize_opts()
+      )
+      |> Map.merge(
+        %{
+          "Action"               => "ModifyDBInstance",
+          "DBInstanceIdentifier" => instance_id,
+          "Version"              => @version
+        }
+      )
 
     request(:patch, "/", query_params)
   end
+
 
   @type delete_db_instance_opts :: [
           {:final_db_snapshot_identifier, binary}
@@ -426,6 +462,198 @@ defmodule ExAws.RDS do
     request(:get, "/", query_params)
   end
 
+  # Portions copyright Daniel Bustamante Ospina 2020:
+  @doc """
+  Creates a DBSnapshot. The source DBInstance must be in "available" state.
+  See <https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBSnapshot.html>
+  """
+  @spec create_db_snapshot(instance_id :: binary, snapshot_id :: binary) :: ExAws.Operation.RestQuery.t()
+  def create_db_snapshot(instance_id, snapshot_id) do
+    query_params = %{
+      "Action"               => "CreateDBSnapshot",
+      "DBInstanceIdentifier" => instance_id,
+      "DBSnapshotIdentifier" => snapshot_id,
+      "Version"              => @version
+    }
+
+    request(:post, "/", query_params)
+  end
+
+
+  @doc """
+  Copies an AWS RDS instance snapshot to a new snapshot
+
+  If an AWS KMS key ID is supplied, the copy (new) snapshot will be encrypted with that key.
+  """
+  @spec copy_db_snapshot(
+    source_snapshot_id :: binary,
+    target_snapshot_id :: binary,
+    kms_key_id         :: binary | nil
+  ) :: ExAws.Operation.RestQuery.t()
+  def copy_db_snapshot(source_snapshot_id, target_snapshot_id, kms_key_id \\ nil) do
+
+    query_params = %{
+      "Action"                     => "CopyDBSnapshot",
+      "SourceDBSnapshotIdentifier" => source_snapshot_id,
+      "TargetDBSnapshotIdentifier" => target_snapshot_id,
+      "Version"                    => @version
+    }
+    |> Map.merge(
+      if is_nil(kms_key_id) do
+        %{}
+      else
+        %{ "KmsKeyId" => kms_key_id }
+      end
+    )
+
+    request(:post, "/", query_params)
+  end
+
+
+  @doc """
+  Deletes a snapshot
+
+  See:
+
+  - [DeleteDBSnapshot - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DeleteDBSnapshot.html)
+  """
+  @spec delete_db_snapshot(snapshot_id :: binary) :: ExAws.Operation.RestQuery.t()
+  def delete_db_snapshot(snapshot_id) do
+    query_params = %{
+      "Action"               => "DeleteDBSnapshot",
+      "DBSnapshotIdentifier" => snapshot_id,
+      "Version"              => @version
+    }
+
+    request(:post, "/", query_params)
+  end
+
+
+
+  # Portions copyright Daniel Bustamante Ospina 2020:
+  @type describe_db_snapshot_opts ::
+  [
+    {:include_public, binary}
+    | {:marker, binary}
+    | {:include_public, boolean}
+    | {:include_shared, boolean}
+    | {:snapshot_type, binary}
+    | {:db_instance_identifier, binary}
+    | {:db_snapshot_identifier, binary}
+    | {:dbi_resource_id, binary}
+    | {:max_records, 20..100}
+  ]
+
+
+  # Portions copyright Daniel Bustamante Ospina 2020:
+  @doc """
+  Returns an AWS query to return info about DB (RDS instance) snapshots
+
+  See:
+
+  - [DescribeDBSnapshots - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBSnapshots.html)
+  """
+  @spec describe_db_snapshots(opts :: describe_db_snapshot_opts) :: ExAws.Operation.RestQuery.t()
+  def describe_db_snapshots(opts \\ []) do
+    query_params = %{
+      "Action"  => "DescribeDBSnapshots",
+      "Version" => @version
+    }
+    # TODO: Move this 'extract' logic into `normalize_opts`?:
+    |> extract_to(:db_snapshot_identifier, "DBSnapshotIdentifier", opts)
+    |> extract_to(:db_instance_identifier, "DBInstanceIdentifier", opts)
+    |> Map.merge(
+      opts
+      |> Keyword.drop([:db_snapshot_identifier, :db_instance_identifier])
+      |> normalize_opts()
+    )
+
+    request(:post, "/", query_params)
+  end
+
+
+  @type restore_db_instance_from_db_snapshot_opts ::
+  [
+      { :instance_class,          binary   }
+    | { :availability_zone,       binary   }
+    | { :db_parameter_group_name, binary   }
+    | { :vpc_security_group_ids,  [binary] }
+  ]
+
+
+
+  @doc """
+  Restores an RDS instance snapshot to a new instance
+
+  See:
+
+  - [RestoreDBInstanceFromDBSnapshot - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html)
+  """
+  @spec restore_db_instance_from_db_snapshot(
+    instance_id :: binary,
+    snapshot_id :: binary,
+    opts        :: restore_db_instance_from_db_snapshot_opts
+  )
+  :: ExAws.Operation.RestQuery.t
+  def restore_db_instance_from_db_snapshot(instance_id, snapshot_id, opts \\ []) do
+
+    query_params =
+      %{}
+      |> extract_to(:vpc_security_group_ids,  nil,                    opts)
+      |> extract_to(:instance_class,          "DBInstanceClass",      opts)
+      |> extract_to(:availability_zone,       "AvailabilityZone",     opts)
+      |> extract_to(:db_parameter_group_name, "DBParameterGroupName", opts)
+      |> Map.merge(
+        %{
+          "Action"               => "RestoreDBInstanceFromDBSnapshot",
+          "DBInstanceIdentifier" => instance_id,
+          "DBSnapshotIdentifier" => snapshot_id,
+          "PubliclyAccessible"   => "false",
+          "Version"              => @version
+        }
+      )
+
+    request(:post, "/", query_params)
+  end
+
+
+
+
+  @doc """
+  Removes metadata tags from an Amazon RDS resource
+
+  For an overview on tagging an Amazon RDS resource, see [Tagging Amazon RDS
+  Resources](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Tagging.html)
+  in the Amazon RDS User Guide.
+
+  ## Parameters:
+
+    * resource - The Amazon RDS resource that the tags are removed from.
+    This value is an Amazon Resource Name (ARN).
+
+    * tag_keys - a List of the tag keys (name) of the tag to be removed
+  """
+  @spec remove_tags_from_resource(resource :: binary, tag_keys :: [binary, ...]) ::
+          ExAws.Operation.RestQuery.t()
+  def remove_tags_from_resource(resource, tag_keys) do
+    query_params = %{
+      "Action" => "RemoveTagsFromResource",
+      "ResourceName" => resource,
+      "Version" => @version
+    }
+
+    query_params =
+      tag_keys
+      |> Stream.with_index(1)
+      |> Enum.reduce(query_params, fn {k, n}, tags_map ->
+        tags_map
+        |> Map.put("TagKeys.member.#{Integer.to_string(n)}", k)
+      end)
+
+    request(:post, "/", query_params)
+  end
+
+
   @doc """
   Generates an auth token used to connect to a db with IAM credentials.
   See <http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Connecting.html>
@@ -449,18 +677,74 @@ defmodule ExAws.RDS do
     String.trim_leading(token, "https://")
   end
 
-  defp request(http_method, path, data) do
-    %ExAws.Operation.RestQuery{
-      http_method: http_method,
-      path: path,
-      params: data,
-      service: :rds
-    }
+
+  @doc """
+  Revoke ingress from a security group
+
+  See:
+
+  - [RevokeDBSecurityGroupIngress - Amazon Relational Database Service](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RevokeDBSecurityGroupIngress.html)
+  """
+  def revoke_db_security_group_ingress() do
+    # TODO
+    raise "Not implemented"
   end
 
+
+
+  # TODO: Combine with `normalize_opts/1` and rename to `opts_to_params`?:
+
+
+  defp extract_to(map, :vpc_security_group_ids, _, keywords) do
+    map
+    |> Map.merge(
+      case Keyword.get(keywords, :vpc_security_group_ids) do
+        nil -> %{}
+
+
+        vpc_security_group_ids ->
+
+          vpc_security_group_ids
+          |> Enum.with_index(
+            fn group_id, index ->
+              {
+                "VpcSecurityGroupIds.VpcSecurityGroupId.#{index + 1}",
+                group_id
+              }
+            end
+          )
+          |> Enum.into(%{})
+      end
+    )
+  end
+
+
+  defp extract_to(map, key, param_name, keywords) do
+    case Keyword.get(keywords, key) do
+      nil   -> map
+      value -> Map.put(map, param_name, value)
+    end
+  end
+
+
+
+  # TODO: Combine with `extract_to/4` and rename to `opts_to_params`?:
   defp normalize_opts(opts) do
+    import ExAws.Utils, only: [camelize_keys: 1]
+
     opts
     |> Enum.into(%{})
     |> camelize_keys()
   end
+
+
+  defp request(http_method, path, data) do
+    %ExAws.Operation.RestQuery{
+      http_method: http_method,
+      path:        path,
+      params:      data,
+      service:     :rds
+    }
+  end
+
 end
